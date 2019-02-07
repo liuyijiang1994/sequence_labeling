@@ -1,6 +1,6 @@
 import torch
 import numpy as np
-from common import Constants
+import Constants
 import gensim
 import random
 
@@ -49,7 +49,7 @@ if __name__ == '__main__':
     stcs = []
     tags = []
 
-    with open('./data/sogo_seed_result_cleaned_token_cleaned.txt', 'r') as f:
+    with open('./data/fusion_data/sogo_seed_result_cleaned_token_cleaned.txt', 'r') as f:
         for line in f:
             i = line.strip().split('\t')
             text, tag = make_text_tag(i[2], i[0], i[1], i[3])

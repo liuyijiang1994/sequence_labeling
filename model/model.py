@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from common import Constants
+import Constants
 
 from model.sub_layer import normal_embedding_layer, elmo_embedding_layer
 

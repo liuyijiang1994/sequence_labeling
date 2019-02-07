@@ -1,5 +1,5 @@
 import torch
-from common import Constants
+import Constants
 import numpy as np
 
 from torch.utils import data

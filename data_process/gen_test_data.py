@@ -1,8 +1,8 @@
 import torch
-from common import Constants
-from utils import stringUtil
+import Constants
+import stringUtil
 from data_process.gen_data import convert_instance_to_idx_seq, make_text_tag
-from common.chunck import Chunck
+from chunck import Chunck
 
 
 #

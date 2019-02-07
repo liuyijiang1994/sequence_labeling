@@ -1,5 +1,5 @@
 import configparser
-from utils.utils import *
+from utils import *
 from mydataasets import seqlabel_dataset, paired_collate_fn
 from train import sort_by_seq_len
 import utils

@@ -2,8 +2,8 @@ import re
 from model import *
 import random
 import os
-from common import Constants
-from common.chunck import Chunck
+import Constants
+from chunck import Chunck
 import torch
 import time
 

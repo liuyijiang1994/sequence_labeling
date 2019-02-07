@@ -8,11 +8,11 @@ UNK_WORD = '<unk>'
 START_TAG = "<START>"
 STOP_TAG = "<STOP>"
 
-fusion_train = 'data/fusion_train.pth'
-fusion_test = 'data/fusion_test.pth'
+fusion_train = 'data/fusion_data/fusion_train.pth'
+fusion_test = 'data/fusion_data/fusion_test.pth'
 
-triger_fusion_train = 'data/triger_fusion_train.pth'
-triger_fusion_test = 'data/triger_fusion_test.pth'
+triger_fusion_train = 'data/fusion_data/triger_fusion_train.pth'
+triger_fusion_test = 'data/fusion_data/triger_fusion_test.pth'
 
 sample_data_path = 'data/sample_data.pth'
 test_data_path = 'data/test_data.pth'

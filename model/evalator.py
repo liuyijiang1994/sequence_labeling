@@ -1,6 +1,6 @@
 import numpy as np
 from common import Constants
-import utils
+from utils import utils
 
 
 class eval_batch:

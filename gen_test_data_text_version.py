@@ -1,8 +1,8 @@
 import xlrd
 import torch
 import numpy as np
-from common import Constants
-from utils import stringUtil
+import Constants
+import stringUtil
 import gensim
 import utils
 
@@ -50,7 +50,7 @@ if __name__ == '__main__':
 
     stcs = []
     tags = []
-    with open('./data/fusion_test_cleaned.txt', 'r') as f:
+    with open('./data/fusion_data/fusion_test_cleaned.txt', 'r') as f:
         # with open('/home/spman_x/disk/liu_codes/sogo_seed_result_cleaned.txt', 'r') as f:
         for line in f:
             i = line.strip().split('\t')
@@ -58,7 +58,7 @@ if __name__ == '__main__':
             stcs.append(text)
             tags.append(tag)
 
-    data = torch.load(Constants.fusion_train)
+    data = torch.load(Constants.triger_fusion_train)
     stcs = convert_instance_to_idx_seq(stcs, data['word2idx'])
 
     test_data = {
