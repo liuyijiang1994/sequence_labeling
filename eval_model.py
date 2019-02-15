@@ -1,11 +1,12 @@
 import configparser
-from utils.utils import *
+from utils import *
 from mydataasets import seqlabel_dataset, paired_collate_fn
 from train import sort_by_seq_len
 import utils
 from model.evalator import eval_w
 import torch
 from model.model import lstm_crf
+import Constants
 
 
 def load_model():
@@ -57,7 +58,7 @@ def get_test_tag():
 
 if __name__ == "__main__":
 
-    model_path = '/tmp/pycharm_project_229/sequence_labeling/result/WBgnzM/save/model_15.pt'
+    model_path = '/tmp/pycharm_project_229/sequence_labeling/result/XZnt1s/save/model_18.pt'
     cfg_path = './config/fusion_word2vec.cfg'
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     BATCH_SZ = 32
@@ -66,7 +67,9 @@ if __name__ == "__main__":
     # print('generating test data...')
     # gen_test_data(test_path)
     eva_matrix = 'fa'
-    test_set = seqlabel_dataset(Constants.fusion_train, stage='valid')
+    # test_set = seqlabel_dataset(Constants.fusion_test, stage='test')
+    test_set = seqlabel_dataset('data/fusion_data/fusion_test_include.pth', stage='test')
+
     test_iter = torch.utils.data.DataLoader(dataset=test_set, batch_size=BATCH_SZ, num_workers=0,
                                             collate_fn=paired_collate_fn)
     print(test_set.tag2idx)

@@ -44,7 +44,7 @@ class seqlabel_dataset(data.Dataset):
     def __init__(self, path, stage='train'):
         self.data = torch.load(path)
         self.word2idx = self.data['word2idx']
-        self.tag2idx=self.data['tag2idx']
+        self.tag2idx = self.data['tag2idx']
         self.vocab = self.data['vocab']
         self.data = self.data[stage]
         self.text = self.data['text']
@@ -61,7 +61,7 @@ class seqlabel_test_dataset(data.Dataset):
     def __init__(self, path):
         self.data = torch.load(path)
         self.word2idx = self.data['word2idx']
-        self.tag2idx=self.data['tag2idx']
+        self.tag2idx = self.data['tag2idx']
         self.vocab = self.data['vocab']
         self.text = self.data['text']
 
@@ -80,7 +80,7 @@ if __name__ == "__main__":
                                              num_workers=0,
                                              collate_fn=paired_collate_fn,
                                              drop_last=True)
-    for text,tag in valid_iter:
-        print(text,tag)
+    for text, tag in valid_iter:
+        print(text, tag)
         break
     print(valid_set.tag2idx)

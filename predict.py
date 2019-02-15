@@ -1,23 +1,30 @@
 import configparser
 from utils import *
-from mydataasets import seqlabel_dataset, paired_collate_fn
 from train import sort_by_seq_len
 import utils
-from model.evalator import eval_w
-from data_process.gen_test_data import gen_test_data
 import torch
 from model.model import lstm_crf
+from mydataasets import collate_fn
+import numpy as np
 
-model_path = '/tmp/pycharm_project_229/sequence_labeling/result/rLYkSi/save/model_5.pt'
-cfg_path = './config/embed1.cfg'
+model_path = '/tmp/pycharm_project_229/sequence_labeling/result/Imi3gb/save/model_19.pt'
+dict_path = Constants.fusion_train
+cfg_path = './config/fusion_word2vec.cfg'
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-BATCH_SZ = 256
+
+
+# 将文本转换为index，找不到则为unk
+def convert_instance_to_idx_seq(stcs, word2idx):
+    ''' Mapping words to idx sequence. '''
+    return [[word2idx.get(w, Constants.UNK) for w in s] for s in stcs]
 
 
 def load_model():
-    print(f'[INFO] loading model...{model_path}')
-    word_to_idx = test_set.word2idx
-    tag_to_idx = test_set.tag2idx
+    print(f'[INFO] loading model from {model_path}')
+    print(f'[INFO] dict path : {dict_path}')
+    dictdata = torch.load(dict_path)
+    word_to_idx = dictdata['word2idx']
+    tag_to_idx = dictdata['tag2idx']
     idx_to_tag = [tag for tag, _ in sorted(tag_to_idx.items(), key=lambda x: x[1])]
     conf = configparser.ConfigParser()
     conf.read(cfg_path)
@@ -26,6 +33,7 @@ def load_model():
     print(model)
     model.eval()
     load_checkpoint(model_path, model)
+    model.eval()
     print(f'[INFO] loading model finished{model_path}')
     return model, word_to_idx, tag_to_idx, idx_to_tag
 
@@ -44,42 +52,18 @@ def clean_pad(data):
     return clean_data
 
 
-def predict():
-    data = []
-    model, word_to_idx, tag_to_idx, idx_to_tag = load_model()
-    for text, tag in test_iter:
-        if text.shape[0] == BATCH_SZ:
-            text = text.to(device)
-            indices, desorted_indices = sort_by_seq_len(text)
-            text = text[indices]
-            tag = tag[indices]
-            result = model.decode(text)
-            tag = clean_pad(tag)
-            for i in range(len(result)):
-                print(result[i])
-                print(tag[i])
-                print('-' * 10)
-            data.append(result)
-    return result
+def predict(model, word_to_idx, text):
+    seq_text_id = convert_instance_to_idx_seq(text, word_to_idx)
+    seq_text_id = collate_fn(seq_text_id).to(device)
+    sorted_indices, desorted_indices = sort_by_seq_len(seq_text_id)
+    seq_text_id = seq_text_id[sorted_indices]
+    seq_tag_id = model.decode(seq_text_id)
 
+    seq_tag_id = collate_fn(seq_tag_id)
+    seq_tag_id = seq_tag_id[desorted_indices]
+    seq_tag_id = clean_pad(seq_tag_id)
 
-def get_test_score():
-    model, word_to_idx, tag_to_idx, idx_to_tag = load_model()
-    guess_tag_list = []
-    gold_tag_list = []
-    sentence_list = []
-    for text, tag in test_iter:
-        if text.shape[0] == BATCH_SZ:
-            text = text.to(device)
-            indices, desorted_indices = sort_by_seq_len(text)
-            text = text[indices]
-            tag = tag[indices]
-            result = model.decode(text)
-            tag = clean_pad(tag)
-            guess_tag_list.extend(result)
-            gold_tag_list.extend(tag)
-            sentence_list.extend(text.tolist())
-    return guess_tag_list, gold_tag_list, sentence_list
+    return seq_tag_id
 
 
 def convert_idx_to_word(seq_idx, vocab):
@@ -94,46 +78,29 @@ def visual_chunck_list(chunck_list, sentence, vocab):
     return visual_chuncks
 
 
+def get_test_text():
+    text = []
+    with open('test_samples.txt', 'r') as f:
+        for line in f:
+            text.append(line.strip())
+    return text
+
+
 if __name__ == "__main__":
-    test_path = './data/test.txt'
-    print('generating test data...')
-    gen_test_data(test_path)
-    eva_matrix = 'fa'
-    test_set = seqlabel_dataset(Constants.msra_data_path, stage='train')
-    test_iter = torch.utils.data.DataLoader(dataset=test_set, batch_size=BATCH_SZ, num_workers=0,
-                                            collate_fn=paired_collate_fn)
-    print(test_set.tag2idx)
-    idx2tag = {v: k for k, v in test_set.tag2idx.items()}
-    evaluator = eval_w(test_set.tag2idx, eva_matrix)
+    text_list = get_test_text()
+
+    model, word_to_idx, tag_to_idx, idx_to_tag = load_model()
+    idx2tag = {v: k for k, v in tag_to_idx.items()}
     with torch.no_grad():
-        guess_tag_list, gold_tag_list, sentence_list = get_test_score()
-
-    print(len(guess_tag_list), len(gold_tag_list), len(sentence_list))
-    pre_seq = {
-        'guess_tag_list': guess_tag_list,
-        'gold_tag_list': gold_tag_list,
-        'sentence_list': sentence_list
-    }
-    torch.save(pre_seq, 'predict_seq.pt')
-
-    with open('predict.txt', 'w') as f:
-        for i in range(len(sentence_list)):
-            visual_sentence = convert_idx_to_word(sentence_list[i], test_set.vocab)
-            guess_chunck_list = utils.bio_to_chuncks(guess_tag_list[i], idx2tag)
-            gold_chunck_list = utils.bio_to_chuncks(gold_tag_list[i], idx2tag)
-            guess_visual = visual_chunck_list(guess_chunck_list, sentence_list[i], test_set.vocab)
-            gold_visual = visual_chunck_list(gold_chunck_list, sentence_list[i], test_set.vocab)
-            f.write(f'{visual_sentence}\n')
-            f.write(f'guess:{guess_visual}\n')
-            f.write(f'gold:{gold_visual}\n')
-            f.write('-' * 20)
-    print(len(guess_tag_list), len(sentence_list))
-    #
-    # print(len(guess_tag_list), len(gold_tag_list))
-    # if 'f' in eva_matrix:
-    #     test_f1 = evaluator.calc_score(guess_tag_list, gold_tag_list)
-    #     for k, v in test_f1.items():
-    #         print(k, v)
-    # else:
-    #     test_acc = evaluator.calc_score(guess_tag_list, gold_tag_list)
-    #     print(' test_acc: %.4f\n' % (test_acc))
+        guess_tag_list = predict(model, word_to_idx, text_list)
+    # for tag in guess_tag_list:
+    #     print(len(tag))
+    for text, tag in zip(text_list, guess_tag_list):
+        print(text)
+        # tag = [idx_to_tag[idx] for idx in tag]
+        # print(tag)
+        # print(idx_to_tag)
+        chunck_list = utils.bio_to_chuncks(tag, idx_to_tag)
+        for chunck in chunck_list:
+            print(text[chunck.b_idx + 1:chunck.b_idx + chunck.length + 1], chunck.type)
+        print('-' * 10)

@@ -152,7 +152,7 @@ if __name__ == "__main__":
         else:
             patience -= 1
         info = {'train_loss': train_loss, 'valid_loss': vld_loss}
-
+        print(f'[INFO]patience:{patience}')
         # 2. Log values and gradients of the parameters (histogram summary)
         for tag, value in model.named_parameters():
             tag = tag.replace('.', '/')
@@ -165,3 +165,4 @@ if __name__ == "__main__":
 
     writer.close()
     print(f'final_model_path:{final_model_path}')
+    print(f'final_model_loss:{best_val_loss}')
