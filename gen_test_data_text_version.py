@@ -6,7 +6,7 @@ import stringUtil
 import gensim
 import utils
 
-out_pkl = Constants.fusion_test
+out_pkl = Constants.argument_fusion_test
 out_sample_pkl = Constants.sample_data_path
 
 tag_2_id = Constants.tag_2_id
@@ -26,9 +26,9 @@ def make_tag(t1, text, tag, b_tag=1):
 
 def make_text_tag(f1, t2, t3, text):
     tag = [Constants.tag_2_id['O']] * len(text)
-    tag = make_tag(f1, text, tag, b_tag=4)
-    tag = make_tag(t2, text, tag, b_tag=6)
-    tag = make_tag(t3, text, tag, b_tag=6)
+    # tag = make_tag(f1, text, tag, b_tag=4)
+    tag = make_tag(t2, text, tag, b_tag=4)
+    tag = make_tag(t3, text, tag, b_tag=4)
     text = list(text)
 
     assert len(text) == len(tag)
@@ -58,7 +58,7 @@ if __name__ == '__main__':
             stcs.append(text)
             tags.append(tag)
 
-    data = torch.load(Constants.fusion_train)
+    data = torch.load(Constants.argument_fusion_train)
     stcs = convert_instance_to_idx_seq(stcs, data['word2idx'])
 
     test_data = {
@@ -72,7 +72,7 @@ if __name__ == '__main__':
         }
     }
 
-    torch.save(test_data, Constants.fusion_test)
+    torch.save(test_data, out_pkl)
     #
     # with open('./data/clean_data.txt', 'w') as f:
     #     for i in range(5):

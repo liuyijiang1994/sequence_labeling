@@ -80,32 +80,45 @@ def visual_chunck_list(chunck_list, sentence, vocab):
 
 def get_test_text():
     text = []
-    with open('fusion_include.txt', 'r') as f:
+    with open('../fusion_web/truesample.txt', 'r') as f:
         for line in f:
-            text.append(line.strip().split('\t')[3])
+            text.append(line.strip())
     random.shuffle(text)
 
-    return text[1:100]
+    return text
 
 
 if __name__ == "__main__":
-    text_list = get_test_text()
-    token_set = set()
-    model, word_to_idx, tag_to_idx, idx_to_tag = load_model()
-    idx2tag = {v: k for k, v in tag_to_idx.items()}
-    with torch.no_grad():
-        guess_tag_list = predict(model, word_to_idx, text_list)
-    # for tag in guess_tag_list:
-    #     print(len(tag))
-    for text, tag in zip(text_list, guess_tag_list):
-        print(text)
-        # tag = [idx_to_tag[idx] for idx in tag]
-        # print(tag)
-        # print(idx_to_tag)
-        chunck_list = utils.bio_to_chuncks(tag, idx_to_tag)
-        for chunck in chunck_list:
-            print(text[chunck.b_idx + 1:chunck.b_idx + chunck.length + 1], chunck.type)
-            token_set.add(text[chunck.b_idx + 1:chunck.b_idx + chunck.length + 1])
-        print('-' * 10)
-    for t in token_set:
-        print(t)
+    with open('truesample.txt', 'w') as w:
+        text_all_list = get_test_text()
+        BATCH_SZ = 32
+        batch = int(len(text_all_list) / 32) - 1
+        print(len(text_all_list))
+        print(batch)
+        model, word_to_idx, tag_to_idx, idx_to_tag = load_model()
+        idx2tag = {v: k for k, v in tag_to_idx.items()}
+        with torch.no_grad():
+            for i in range(batch):
+                text_list = text_all_list[i * 32:(i + 1) * 32]
+                guess_tag_list = predict(model, word_to_idx, text_list)
+                for text, tag in zip(text_list, guess_tag_list):
+                    chunck_list = utils.bio_to_chuncks(tag, idx_to_tag)
+                    fusion_set = set()
+                    part_set = set()
+                    for chunck in chunck_list:
+                        if chunck.type == 'part':
+                            part_set.add(text[chunck.b_idx + 1:chunck.b_idx + chunck.length + 1])
+                        if chunck.type == 'fusion':
+                            fusion_set.add(text[chunck.b_idx + 1:chunck.b_idx + chunck.length + 1])
+                    if len(fusion_set) == 1 and len(part_set) == 2:
+                        fusion_token = fusion_set.pop()
+                        p1_token = part_set.pop()
+                        p2_token = part_set.pop()
+
+                        if len(fusion_token) == 2 and len(p1_token) == 2 and len(p2_token) == 2:
+
+                            if (p1_token[0] not in fusion_token and p1_token[1] not in fusion_token) or (
+                                    p2_token[0] not in fusion_token and p2_token[1] not in fusion_token):
+                                continue
+                            else:
+                                w.write(text + '\n')

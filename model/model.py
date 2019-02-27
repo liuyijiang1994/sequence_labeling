@@ -9,7 +9,7 @@ SOS_IDX = Constants.BOS
 EOS_IDX = Constants.EOS
 UNK_IDX = Constants.UNK
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 class lstm_crf(nn.Module):

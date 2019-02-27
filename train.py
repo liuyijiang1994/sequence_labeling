@@ -101,7 +101,7 @@ if __name__ == "__main__":
 
     writer = SummaryWriter(log_path)
 
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     training_set = seqlabel_dataset(data_path)
 
     training_iter = torch.utils.data.DataLoader(dataset=training_set,

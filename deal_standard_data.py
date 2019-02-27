@@ -1,4 +1,4 @@
-from common import Constants
+import Constants
 import codecs
 import random
 import numpy as np
@@ -6,7 +6,7 @@ import torchtext.vocab as vocab
 import torch
 import gensim
 
-file_path = './data/dh_msra.txt'
+file_path = './data/keywords_data/abstract_tag.txt'
 train_ratio = 0.7
 min_word = 1
 emb_dim = 300
@@ -28,12 +28,12 @@ def load_iob2(file_path):
     labels = []
     with codecs.open(file_path) as f:
         for index, line in enumerate(f):
-            items = line.strip().split()
+            items = line.strip().split('\t')
             if len(items) == 2:
                 token, label = items
                 tokens.append(token)
                 labels.append(label)
-            elif len(items) == 0:
+            elif len(items) < 2:
                 if tokens:
                     token_seqs.append(''.join(tokens))
                     label_seqs.append(labels)
@@ -53,7 +53,7 @@ def load_iob2(file_path):
 def deal(file_path):
     stcs, label_seqs = load_iob2(file_path)
     word2idx = Constants.init_word_2_id
-    tag2idx = Constants.init_tag_2_id
+    tag2idx = Constants.tag_2_id
     # build vocabulary
     full_vocab = set(w for sent in stcs for w in sent)
     word_count = {w: 0 for w in full_vocab}
@@ -101,18 +101,30 @@ def deal(file_path):
     split_ix = int(train_ratio * len(stcs))
     stcs = convert_instance_to_idx_seq(stcs, word2idx)
     label_seqs = [[tag2idx.get(w) for w in s] for s in label_seqs]
+
+    c = list(zip(stcs, label_seqs))
+    random.shuffle(c)
+    stcs[:], label_seqs[:] = zip(*c)
+
+    split_i1 = int(0.4 * len(stcs))
+    split_i2 = int(0.8 * len(stcs))
+
     data = {
         'word2idx': word2idx,
         'tag2idx': tag2idx,
         'vocab': full_vocab,
         'embedding_weight': weights_matrix,
         'train': {
-            'text': stcs[:split_ix],
-            'tag': label_seqs[:split_ix]
+            'text': stcs[:split_i1],
+            'tag': label_seqs[:split_i1]
         },
         'valid': {
-            'text': stcs[split_ix:],
-            'tag': label_seqs[split_ix:]
+            'text': stcs[split_i1:split_i2],
+            'tag': label_seqs[split_i1:split_i2]
+        },
+        'test': {
+            'text': stcs[split_i2:],
+            'tag': label_seqs[split_i2:]
         }
     }
 
@@ -123,4 +135,4 @@ if __name__ == '__main__':
     language = 'chinese'
     data = deal(file_path)
     print('[Info] Finish.')
-    torch.save(data, Constants.msra_data_path)
+    torch.save(data, Constants.keywords_data)

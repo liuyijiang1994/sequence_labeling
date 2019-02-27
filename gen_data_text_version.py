@@ -4,7 +4,7 @@ import Constants
 import gensim
 import random
 
-out_pkl = Constants.fusion_train
+out_pkl = Constants.argument_fusion_train
 out_sample_pkl = Constants.sample_data_path
 
 tag_2_id = Constants.tag_2_id
@@ -24,9 +24,9 @@ def make_tag(t1, text, tag, b_tag=1):
 
 def make_text_tag(f1, t2, t3, text):
     tag = [Constants.tag_2_id['O']] * len(text)
-    tag = make_tag(f1, text, tag, b_tag=4)
-    tag = make_tag(t2, text, tag, b_tag=6)
-    tag = make_tag(t3, text, tag, b_tag=6)
+    # tag = make_tag(f1, text, tag, b_tag=4)
+    tag = make_tag(t2, text, tag, b_tag=4)
+    tag = make_tag(t3, text, tag, b_tag=4)
     text = list(text)
 
     assert len(text) == len(tag)
@@ -49,7 +49,7 @@ if __name__ == '__main__':
     stcs = []
     tags = []
 
-    with open('./data/fusion_data/fusion_sogo.txt', 'r') as f:
+    with open('./data/fusion_data/fusion_include.txt', 'r') as f:
         for line in f:
             i = line.strip().split('\t')
             text, tag = make_text_tag(i[2], i[0], i[1], i[3])
